@@ -73,58 +73,63 @@ def login(user):
         return 0
         
 def course(sid, wanted):
-    #请求
-    header =  {  'Host'            : 'uems.sysu.edu.cn',
-                 'Connection'      : 'keep-alive',
-                 'Accept'          : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                 'Referer'         : 'http://uems.sysu.edu.cn/elect/s/types?sid='+sid,
-                 'Accept-Encoding' : 'gzip,deflate,sdch',
-                 'Accept-Language' : 'zh-CN,zh;q=0.8',
-                 'User-Agent'      : 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) \
-                                      Chrome/35.0.1916.153 Safari/537.36',
-              }
-    
-    # 专选
-    req = urllib2.Request(
-                url = 'http://uems.sysu.edu.cn/elect/s/courses?kclb=21&xnd=2014-2015&xq=1&xqm=4&blank=1&sid='+sid,
-                #kclb=30&xqm=4&sort=&ord=&xnd=2014-2015&xq=1&sid=ec1c7f88-e90c-4f18-9bf1-efc4d5223178
-                headers = header
-            )
-    res = urllib2.urlopen(req)
-    content = res.read().decode('utf-8').encode('gb2312')
-    show(content, '专选', wanted)
-
-    # 公选
-    req = urllib2.Request(
-                url = 'http://uems.sysu.edu.cn/elect/s/courses?kclb=30&xnd=2014-2015&xq=1&xqm=4&blank=1&sid='+sid,
-                headers = header
-            )
-    res = urllib2.urlopen(req)
-    content = res.read().decode('utf-8').encode('gb2312')
-    show(content, '公选', wanted)
-    
-    '''
-    # 专必
-    req = urllib2.Request(
-                url = 'http://uems.sysu.edu.cn/elect/s/courses?kclb=11&xnd=2014-2015&xq=1&sid='+sid,
-                headers = header
-            )
-    res = urllib2.urlopen(req)
-    content = res.read().decode('utf-8').encode('gb2312')
-    show(content, '专必', wanted)
+    try:
+        #请求
+        header =  {  'Host'            : 'uems.sysu.edu.cn',
+                     'Connection'      : 'keep-alive',
+                     'Accept'          : 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                     'Referer'         : 'http://uems.sysu.edu.cn/elect/s/types?sid='+sid,
+                     'Accept-Encoding' : 'gzip,deflate,sdch',
+                     'Accept-Language' : 'zh-CN,zh;q=0.8',
+                     'User-Agent'      : 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) \
+                                          Chrome/35.0.1916.153 Safari/537.36',
+                  }
         
-    
-        
-    # 公必
-    req = urllib2.Request(
-                url = 'http://uems.sysu.edu.cn/elect/s/courses?kclb=10&xnd=2014-2015&xq=1&sid='+sid,
-                headers = header
-            )
-    res = urllib2.urlopen(req)
-    content = res.read().decode('utf-8').encode('gb2312')
-    show(content, '公必', wanted)
-    '''
+        # 专选
+        req = urllib2.Request(
+                    url = 'http://uems.sysu.edu.cn/elect/s/courses?kclb=21&xnd=2014-2015&xq=1&xqm=4&blank=1&sid='+sid,
+                    #kclb=30&xqm=4&sort=&ord=&xnd=2014-2015&xq=1&sid=ec1c7f88-e90c-4f18-9bf1-efc4d5223178
+                    headers = header
+                )
+        res = urllib2.urlopen(req)
+        content = res.read().decode('utf-8').encode('gb2312')
+        show(content, '专选', wanted)
 
+        # 公选
+        req = urllib2.Request(
+                    url = 'http://uems.sysu.edu.cn/elect/s/courses?kclb=30&xnd=2014-2015&xq=1&xqm=4&blank=1&sid='+sid,
+                    headers = header
+                )
+        res = urllib2.urlopen(req)
+        content = res.read().decode('utf-8').encode('gb2312')
+        show(content, '公选', wanted)
+        
+        '''
+        # 专必
+        req = urllib2.Request(
+                    url = 'http://uems.sysu.edu.cn/elect/s/courses?kclb=11&xnd=2014-2015&xq=1&sid='+sid,
+                    headers = header
+                )
+        res = urllib2.urlopen(req)
+        content = res.read().decode('utf-8').encode('gb2312')
+        show(content, '专必', wanted)
+            
+        
+            
+        # 公必
+        req = urllib2.Request(
+                    url = 'http://uems.sysu.edu.cn/elect/s/courses?kclb=10&xnd=2014-2015&xq=1&sid='+sid,
+                    headers = header
+                )
+        res = urllib2.urlopen(req)
+        content = res.read().decode('utf-8').encode('gb2312')
+        show(content, '公必', wanted)
+        '''
+        return sid
+    except urllib2.HTTPError, e:
+        # print 'error', e.reason, e.code
+        return 0
+        
 def init():
     print '---------------设置参数---------------'
     print '----当你关注的课程有多余时会响一声----'
@@ -149,11 +154,11 @@ def init():
            }
     while (flag == 'y'):
         if (sid == 0):
-            sid = login(user)
             flag = raw_input('开始?(y/n)')
+            sid = login(user)
         else:
             print '---------------查询开始---------------'
-            course(sid, wanted)
+            sid = course(sid, wanted)
             print '---------------查询结束---------------'
             flag = 'y'
             time.sleep(delay)
