@@ -3,3 +3,6 @@
 
 #png
 *.png
+
+#OSX noises
+.DS_Store
