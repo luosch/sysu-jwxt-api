@@ -2,6 +2,9 @@
 
 API for sysu educational system
 
+##plan
+![plan](https://lsich.com/resource/sysu_jwxt_api_plan.png)
+
 ##TODO
 
 - Design api system
