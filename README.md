@@ -2,8 +2,19 @@
 
 API for sysu educational system
 
-##plan
+##Plan
 ![plan](https://lsich.com/resource/sysu_jwxt_api_plan.png)
+
+##Requirement
+```bash
+# OSX
+brew install tesseract
+
+# Debian/Ubuntu
+sudo apt-get install tesseract-ocr
+
+sudo pip install -r requirements.txt
+```
 
 ##TODO
 
