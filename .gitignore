@@ -1,8 +1,11 @@
-#mindmap
+# mindmap
 *.itmz
 
-#png
+# png
 *.png
 
-#OSX noises
+# OSX noises
 .DS_Store
+
+# urlRecord
+urlRecord.txt
