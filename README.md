@@ -18,7 +18,7 @@ sudo pip install -r requirements.txt
 
 ##TODO
 
-- Design api system
+- ~~Design API system~~ (added 2015/11/20)
 - Construct python spider
 - Create some examples
 - Add build test
