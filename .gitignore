@@ -7,9 +7,13 @@
 # OSX noises
 .DS_Store
 
-# urlRecord
+# draft
+test.txt
 urlRecord.txt
 
 # config
 config.py
+
+# py
+*.pyc
 .idea/

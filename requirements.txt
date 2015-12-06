@@ -2,3 +2,5 @@ pytesseract>=0.1.6
 requests>=2.7.0
 Pillow>=3.0.0
 beautifulsoup4>=4.4.1
+lxml>=3.5.0
+demjson>='2.2.3'

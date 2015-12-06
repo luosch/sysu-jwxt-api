@@ -1,14 +1,14 @@
 # coding=utf-8
 
 from PIL import Image
-from PIL import ImageChops
 import pytesseract
 import requests
 import hashlib
-import json
+import demjson
 from bs4 import BeautifulSoup
 
-class jwxt:
+
+class JWXT:
     def __init__(self, stuNum, password):
         """
         return a instance of jwxt api
@@ -57,3 +57,48 @@ class jwxt:
             return True
         else:
             return False
+
+    def getCourseList(self, xq, xnd):
+        req = self.session.post(
+            url='http://uems.sysu.edu.cn/jwxt/KcbcxAction/KcbcxAction.action?method=getList',
+            headers={
+                'Accept': '*/*',
+                'ajaxRequest': 'true',
+                'render': 'unieap',
+                '__clientType': 'unieap',
+                'workitemid': 'null',
+                'resourceid': 'null',
+                'Content-Type': 'multipart/form-data',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'
+            },
+            json={
+                'header':{
+                    "code": -100,
+                    "message": {"title": "", "detail": ""}
+                },
+                'body':{
+                    'dataStores':{},
+                    'parameters':{
+                        'args': [str(xq), str(xnd)],
+                        'responseParam': 'rs'
+                    }
+                }
+            }
+        )
+        res = demjson.decode(req.content.decode('utf-8'))
+        rawHTML = res['body']['parameters']['rs']
+        soup = BeautifulSoup(rawHTML.encode('utf-8'), 'lxml')
+        courseList = []
+        for tr in soup.find_all('tr'):
+            for index, td in enumerate(tr.find_all('td')):
+                if td.has_attr('rowspan'):
+                    raw = td.contents
+                    courseList.append({
+                        'courseName': raw[0],
+                        'location': raw[2],
+                        'day': index,
+                        'time': raw[4].replace(u'节', ''),
+                        'duration': raw[6]
+                    })
+
+        return courseList
