@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding:utf-8 -*-
 
 from PIL import Image
 import pytesseract
@@ -8,10 +8,10 @@ import demjson
 from bs4 import BeautifulSoup
 
 
-class JWXT:
+class Jwxt:
     def __init__(self, stuNum, password):
         """
-        return a instance of jwxt api
+        return a instance of JWXT api
         :param stuNum: eight bit student number, like '13331193'
         :param password: the corresponding password
         """
@@ -59,6 +59,11 @@ class JWXT:
             return False
 
     def getCourseList(self, xq, xnd):
+        """
+        return a list contains course information
+        :param xq: term, can be '1', '2', '3'
+        :param xnd: year, eg. '2015-2016'
+        """
         req = self.session.post(
             url='http://uems.sysu.edu.cn/jwxt/KcbcxAction/KcbcxAction.action?method=getList',
             headers={
@@ -71,19 +76,20 @@ class JWXT:
                 'Content-Type': 'multipart/form-data',
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'
             },
-            json={
-                'header':{
-                    "code": -100,
-                    "message": {"title": "", "detail": ""}
-                },
-                'body':{
-                    'dataStores':{},
-                    'parameters':{
-                        'args': [str(xq), str(xnd)],
-                        'responseParam': 'rs'
-                    }
-                }
-            }
+            data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{},parameters:{"args": ["'+xq+'", "'+xnd+'"], "responseParam": "rs"}}}'
+            # data={
+            #     'header':{
+            #         "code": -100,
+            #         "message": {"title": "", "detail": ""}
+            #     },
+            #     'body':{
+            #         'dataStores':{},
+            #         'parameters':{
+            #             'args': [xq, xnd],
+            #             'responseParam': 'rs'
+            #         }
+            #     }
+            # }
         )
         res = demjson.decode(req.content.decode('utf-8'))
         rawHTML = res['body']['parameters']['rs']
@@ -102,3 +108,27 @@ class JWXT:
                     })
 
         return courseList
+
+    def getScoreList(self, xq, xnd):
+        """
+        return a list contains scores for each course
+        :param xq: term, can be '1', '2', '3'
+        :param xnd: year, eg. '2015-2016'
+        """
+        req = self.session.post(
+            url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getKccjList',
+            headers={
+                'Accept': '*/*',
+                'ajaxRequest': 'true',
+                'render': 'unieap',
+                '__clientType': 'unieap',
+                'workitemid': 'null',
+                'resourceid': 'null',
+                'Content-Type': 'multipart/form-data',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'
+            },
+            data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{kccjStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"kccjStore",pageNumber:1,pageSize:10,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.xscj.xscjcx.model.KccjModel",order:"t.xn, t.xq, t.kch, t.bzw"}},parameters:{"kccjStore-params": [{"name": "Filter_t.pylbm_0.7607312996540416", "type": "String", "value": "\''+'01'+'\'", "condition": " = ", "property": "t.pylbm"}, {"name": "Filter_t.xn_0.7704413492958447", "type": "String", "value": "\''+xnd+'\'", "condition": " = ", "property": "t.xn"}, {"name": "Filter_t.xq_0.40025491171181043", "type": "String", "value": "\''+xq+'\'", "condition": " = ", "property": "t.xq"}], "args": ["student"]}}}'
+        )
+
+        res = demjson.decode(req.content.decode('utf-8'))
+        return res['body']['dataStores']['kccjStore']['rowSet']['primary']
