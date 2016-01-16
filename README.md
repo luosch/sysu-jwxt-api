@@ -3,7 +3,7 @@
 API for sysu educational system
 
 ##Plan
-![plan](https://lsich.com/resource/sysu_jwxt_api_plan.png)
+![plan](https://raw.githubusercontent.com/luosch/sysu-jwxt-api/master/screenshots/plan.png)
 
 ##Requirement
 ```bash
