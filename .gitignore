@@ -1,9 +1,6 @@
 # mindmap
 *.itmz
 
-# png
-*.png
-
 # OSX noises
 .DS_Store
 

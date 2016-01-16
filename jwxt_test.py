@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding:utf-8 -*-
 
 from jwxt import JWXT
 from config import *
@@ -6,7 +6,8 @@ from config import *
 def main():
     test1 = JWXT(TEST_STUNUM, TEST_PASSWORD)
     test1.login()
-    print test1.getCourseList('2', '2015-2016')
+    coures_list = test1.getCourseList('3', '2015-2016')
+    print len(coures_list)
 
 if __name__ == '__main__':
     main()
