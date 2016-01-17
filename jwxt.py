@@ -9,14 +9,14 @@ from bs4 import BeautifulSoup
 
 
 class Jwxt:
-    def __init__(self, stuNum, password):
+    def __init__(self, sno, password):
         """
-        return a instance of JWXT api
-        :param stuNum: eight bit student number, like '13331193'
+        :param sno: eight bit student number, like '13331193'
         :param password: the corresponding password
+        :return: a instance of JWXT api
         """
         self.session = requests.session()
-        self.stuNum = stuNum
+        self.sno = sno
         self.password = hashlib.md5(password.encode('utf-8')).hexdigest().upper()
 
     def login(self):
@@ -40,7 +40,7 @@ class Jwxt:
 
         # try to login
         loginData = {
-            "j_username": self.stuNum,
+            "j_username": self.sno,
             "j_password": self.password,
             "jcaptcha_response": verifyCode,
             "rno": rno
@@ -58,11 +58,17 @@ class Jwxt:
         else:
             return False
 
-    def getCourseList(self, xq, xnd):
+    def getInfo(self):
         """
-        return a list contains course information
-        :param xq: term, can be '1', '2', '3'
+        :return:
+        """
+        pass
+
+    def getCourseList(self, xnd, xq):
+        """
         :param xnd: year, eg. '2015-2016'
+        :param xq: term, can be '1', '2', '3'
+        :return: list contains course information
         """
         req = self.session.post(
             url='http://uems.sysu.edu.cn/jwxt/KcbcxAction/KcbcxAction.action?method=getList',
@@ -77,19 +83,6 @@ class Jwxt:
                 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'
             },
             data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{},parameters:{"args": ["'+xq+'", "'+xnd+'"], "responseParam": "rs"}}}'
-            # data={
-            #     'header':{
-            #         "code": -100,
-            #         "message": {"title": "", "detail": ""}
-            #     },
-            #     'body':{
-            #         'dataStores':{},
-            #         'parameters':{
-            #             'args': [xq, xnd],
-            #             'responseParam': 'rs'
-            #         }
-            #     }
-            # }
         )
         res = demjson.decode(req.content.decode('utf-8'))
         rawHTML = res['body']['parameters']['rs']
@@ -109,11 +102,11 @@ class Jwxt:
 
         return courseList
 
-    def getScoreList(self, xq, xnd):
+    def getScoreList(self, xnd, xq):
         """
-        return a list contains scores for each course
-        :param xq: term, can be '1', '2', '3'
         :param xnd: year, eg. '2015-2016'
+        :param xq: term, can be '1', '2', '3'
+        :return: list contains scores for each course
         """
         req = self.session.post(
             url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getKccjList',
@@ -132,3 +125,89 @@ class Jwxt:
 
         res = demjson.decode(req.content.decode('utf-8'))
         return res['body']['dataStores']['kccjStore']['rowSet']['primary']
+
+    def getGPA(self, xnd, xq):
+        """
+        :param xnd: year, eg. '2015-2016'
+        :param xq: term, can be '1', '2', '3'
+        :return: GPA of one term
+        """
+        req = self.session.post(
+            url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getAllJd',
+            headers={
+                'Accept': '*/*',
+                'ajaxRequest': 'true',
+                'render': 'unieap',
+                '__clientType': 'unieap',
+                'workitemid': 'null',
+                'resourceid': 'null',
+                'Content-Type': 'multipart/form-data',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'
+            },
+            data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{jdStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"jdStore",pageNumber:1,pageSize:0,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.djks.ksgl.model.TwoColumnModel"}},parameters:{"args": ["'+self.sno + '", "' + xnd + '", "' + xq + '", ""]}}}'
+        )
+
+        res = demjson.decode(req.content.decode('utf-8'))
+        return res['body']['dataStores']['jdStore']['rowSet']['primary']
+
+    def getAllGPA(self):
+        """
+        :return: GPA of all terms
+        """
+        req = self.session.post(
+            url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getAllJd',
+            headers={
+                'Accept': '*/*',
+                'ajaxRequest': 'true',
+                'render': 'unieap',
+                '__clientType': 'unieap',
+                'workitemid': 'null',
+                'resourceid': 'null',
+                'Content-Type': 'multipart/form-data',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'
+            },
+            data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{allJdStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"allJdStore",pageNumber:1,pageSize:2147483647,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.djks.ksgl.model.TwoColumnModel"}},parameters:{"args": ["'+self.sno + '", "", "", ""]}}}'
+        )
+
+        res = demjson.decode(req.content.decode('utf-8'))
+        return res['body']['dataStores']['allJdStore']['rowSet']['primary']
+
+    def getCredit(self):
+        """
+        :return: credit already got
+        """
+        req = self.session.post(
+            url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getAllXf',
+            headers={
+                'Accept': '*/*',
+                'ajaxRequest': 'true',
+                'render': 'unieap',
+                '__clientType': 'unieap',
+                'workitemid': 'null',
+                'resourceid': 'null',
+                'Content-Type': 'multipart/form-data',
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'
+            },
+            data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{allJdStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"allJdStore",pageNumber:1,pageSize:2147483647,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.djks.ksgl.model.TwoColumnModel"}},parameters:{"args": ["'+self.sno + '", "", "", ""]}}}'
+        )
+        res = demjson.decode(req.content.decode('utf-8'))
+        return res['body']['dataStores']['allJdStore']['rowSet']['primary']
+    #
+    # def getTotalCredit(self):
+    #     """
+    #     :return: total credits needed for graduation
+    #     """
+    #     req = self.session.get(
+    #         url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getZyxf',
+    #         headers={
+    #             'Accept': '*/*',
+    #             'ajaxRequest': 'true',
+    #             'render': 'unieap',
+    #             '__clientType': 'unieap',
+    #             'workitemid': 'null',
+    #             'resourceid': 'null',
+    #             'Content-Type': 'multipart/form-data',
+    #             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'
+    #         },
+    #         data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{zxzyxfStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"zxzyxfStore",pageNumber:1,pageSize:2147483647,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.djks.ksgl.model.TwoColumnModel"}},parameters:{"zxzyxfStore-params": [{"name": "pylbm", "type": "String", "value": "\'01\'", "condition": " = ", "property": "x.pylbm"}, {"name": "nj", "type": "String", "value": "\''+grade+'\'", "condition": " = ", "property": "x.nj"}, {"name": "zyh", "type": "String", "value": "\''+tno+'\'", "condition": " = ", "property": "x.zyh"}], "args": []}}}'
+    #     )
