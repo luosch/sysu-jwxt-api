@@ -12,7 +12,6 @@ brew install tesseract
 
 # Debian/Ubuntu
 sudo apt-get install tesseract-ocr
-
 sudo pip install -r requirements.txt
 ```
 
