@@ -3,7 +3,7 @@
 API for sysu educational system
 
 ##Plan
-![plan](https://raw.githubusercontent.com/luosch/sysu-jwxt-api/master/screenshots/plan.png)
+![](https://raw.githubusercontent.com/luosch/sysu-jwxt-api/master/screenshots/plan.png)
 
 ##Requirement
 ```bash
@@ -15,13 +15,13 @@ sudo apt-get install tesseract-ocr
 sudo pip install -r requirements.txt
 ```
 
-##TODO
+##Screenshots
+![](https://raw.githubusercontent.com/luosch/sysu-jwxt-api/master/screenshots/test.png)
 
-- ~~Design API system~~ (added 2015/11/20)
-- Construct python spider
-- Create some examples
-- Add build test
+##Todo
+- ~~Design API system~~ (done 2015/11/20)
+- ~~Construct python spider~~ (done 2016/1/28)
+- ~~Create some examples~~ (done 2016/1/28)
 
-##License
-
-This code is distributed under the terms and conditions of the MIT license.
+##Licenses
+All source code is licensed under the [MIT License](https://raw.githubusercontent.com/luosch/sysu-jwxt-api/master/LICENSE).
