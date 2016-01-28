@@ -7,6 +7,7 @@ from config import TEST_STUNUM, TEST_PASSWORD
 def main():
     test = Jwxt(TEST_STUNUM, TEST_PASSWORD)
     test.login()
+    test.get_info()
 
     for credit in test.get_credit():
         print credit['oneColumn'], credit['twoColumn']
@@ -18,18 +19,13 @@ def main():
 
     print '-' * 50
 
-    for gpa in test.get_all_gpa():
-        print gpa['oneColumn'], gpa['twoColumn']
-
-    print '-' * 50
-
     for gpa in test.get_gpa('2015-2016', '1'):
         print gpa['oneColumn'], gpa['twoColumn']
 
     print '-' * 50
 
     for course in test.get_course_list('2015-2016', '3'):
-        print course['courseName']
+        print course['course_name']
 
     print '-' * 50
 

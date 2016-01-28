@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-
 from PIL import Image
 import pytesseract
 import requests
@@ -15,7 +14,8 @@ class Jwxt:
         :param password: the corresponding password
         :return: a instance of JWXT api
         """
-        self.session = requests.session()
+        # self.session = requests.session()
+        self.cookies = None
         self.sno = sno
         self.password = hashlib.md5(password.encode('utf-8')).hexdigest().upper()
         self.grade = None
@@ -34,15 +34,16 @@ class Jwxt:
 
     def login(self):
         # get random number value and store cookie via session
-        req = self.session.get(
+        req = requests.get(
             url='http://uems.sysu.edu.cn/jwxt',
             headers={'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36'}
         )
-        soup = BeautifulSoup(req.content.decode('utf-8'), 'html.parser')
+        self.cookies = {'JSESSIONID': req.cookies['JSESSIONID']}
+        soup = BeautifulSoup(req.content.decode('utf-8'), 'lxml')
         rno = soup.find(id='rno')['value']
 
         # get verify_code using pytesseract
-        req = self.session.get("http://uems.sysu.edu.cn/jwxt/jcaptcha", stream=True)
+        req = requests.get("http://uems.sysu.edu.cn/jwxt/jcaptcha", cookies=self.cookies, stream=True)
         im = Image.open(req.raw).convert('L')
         im = im.point(lambda x: 255 if x > 128 else x)
         im = im.point(lambda x: 0 if x < 255 else 255)
@@ -58,32 +59,31 @@ class Jwxt:
             "jcaptcha_response": verify_code,
             "rno": rno
         }
-        req = self.session.post(
+        req = requests.post(
             url="http://uems.sysu.edu.cn/jwxt/j_unieap_security_check.do",
-            data=login_data
+            data=login_data,
+            cookies=self.cookies
         )
 
-        soup = BeautifulSoup(req.content.decode('utf-8'), 'html.parser')
+        soup = BeautifulSoup(req.content.decode('utf-8'), 'lxml')
 
         if req.status_code == 200:
             text = soup.find('title')
             if text and text.get_text() == u'首页':
                 return False
-
-            # get student info
-            self.get_info()
-
-            return True
         else:
             return False
+
+        return True
 
     def get_info(self):
         """
         :set major number and grade
         """
-        req = self.session.post(
+        req = requests.post(
             url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=judgeStu',
             headers=self.headers,
+            cookies=self.cookies,
             data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{},parameters:{"args": [], "responseParam": "result"}}}'
         )
         res = demjson.decode(req.content.decode('utf-8'))
@@ -97,9 +97,10 @@ class Jwxt:
         :param xq: term, can be '1', '2', '3'
         :return: list contains course information
         """
-        req = self.session.post(
+        req = requests.post(
             url='http://uems.sysu.edu.cn/jwxt/KcbcxAction/KcbcxAction.action?method=getList',
             headers=self.headers,
+            cookies=self.cookies,
             data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{},parameters:{"args": ["'+xq+'", "'+xnd+'"], "responseParam": "rs"}}}'
         )
         res = demjson.decode(req.content.decode('utf-8'))
@@ -110,11 +111,13 @@ class Jwxt:
             for index, td in enumerate(tr.find_all('td')):
                 if td.has_attr('rowspan'):
                     raw = td.contents
+                    course_time = unicode(raw[4]).replace(u'节', '').split('-')
                     course_list.append({
-                        'courseName': raw[0],
+                        'course_name': raw[0],
                         'location': raw[2],
                         'day': index,
-                        'time': raw[4].replace(u'节', ''),
+                        'start_time': course_time[0],
+                        'end_time': course_time[1],
                         'duration': raw[6]
                     })
 
@@ -126,9 +129,10 @@ class Jwxt:
         :param xq: term, can be '1', '2', '3'
         :return: list contains scores for each course
         """
-        req = self.session.post(
+        req = requests.post(
             url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getKccjList',
             headers=self.headers,
+            cookies=self.cookies,
             data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{kccjStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"kccjStore",pageNumber:1,pageSize:10,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.xscj.xscjcx.model.KccjModel",order:"t.xn, t.xq, t.kch, t.bzw"}},parameters:{"kccjStore-params": [{"name": "Filter_t.pylbm_0.7607312996540416", "type": "String", "value": "\''+'01'+'\'", "condition": " = ", "property": "t.pylbm"}, {"name": "Filter_t.xn_0.7704413492958447", "type": "String", "value": "\''+xnd+'\'", "condition": " = ", "property": "t.xn"}, {"name": "Filter_t.xq_0.40025491171181043", "type": "String", "value": "\''+xq+'\'", "condition": " = ", "property": "t.xq"}], "args": ["student"]}}}'
         )
 
@@ -141,9 +145,10 @@ class Jwxt:
         :param xq: term, can be '1', '2', '3'
         :return: GPA of one term
         """
-        req = self.session.post(
+        req = requests.post(
             url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getAllJd',
             headers=self.headers,
+            cookies=self.cookies,
             data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{jdStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"jdStore",pageNumber:1,pageSize:0,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.djks.ksgl.model.TwoColumnModel"}},parameters:{"args": ["'+self.sno + '", "' + xnd + '", "' + xq + '", ""]}}}'
         )
         res = demjson.decode(req.content.decode('utf-8'))
@@ -153,9 +158,10 @@ class Jwxt:
         """
         :return: GPA of all terms
         """
-        req = self.session.post(
+        req = requests.post(
             url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getAllJd',
             headers=self.headers,
+            cookies=self.cookies,
             data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{allJdStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"allJdStore",pageNumber:1,pageSize:2147483647,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.djks.ksgl.model.TwoColumnModel"}},parameters:{"args": ["'+self.sno + '", "", "", ""]}}}'
         )
         res = demjson.decode(req.content.decode('utf-8'))
@@ -165,9 +171,10 @@ class Jwxt:
         """
         :return: credit already got
         """
-        req = self.session.post(
+        req = requests.post(
             url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getAllXf',
             headers=self.headers,
+            cookies=self.cookies,
             data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{allJdStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"allJdStore",pageNumber:1,pageSize:2147483647,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.djks.ksgl.model.TwoColumnModel"}},parameters:{"args": ["'+self.sno + '", "", "", ""]}}}'
         )
         res = demjson.decode(req.content.decode('utf-8'))
@@ -177,9 +184,10 @@ class Jwxt:
         """
         :return: total credits needed for graduation
         """
-        req = self.session.get(
+        req = requests.post(
             url='http://uems.sysu.edu.cn/jwxt/xscjcxAction/xscjcxAction.action?method=getZyxf',
             headers=self.headers,
+            cookies=self.cookies,
             data='{header:{"code": -100, "message": {"title": "", "detail": ""}},body:{dataStores:{zxzyxfStore:{rowSet:{"primary":[],"filter":[],"delete":[]},name:"zxzyxfStore",pageNumber:1,pageSize:2147483647,recordCount:0,rowSetName:"pojo_com.neusoft.education.sysu.djks.ksgl.model.TwoColumnModel"}},parameters:{"zxzyxfStore-params": [{"name": "pylbm", "type": "String", "value": "\'01\'", "condition": " = ", "property": "x.pylbm"}, {"name": "nj", "type": "String", "value": "\''+self.grade+'\'", "condition": " = ", "property": "x.nj"}, {"name": "zyh", "type": "String", "value": "\''+self.tno+'\'", "condition": " = ", "property": "x.zyh"}], "args": []}}}'
         )
         res = demjson.decode(req.content.decode('utf-8'))
