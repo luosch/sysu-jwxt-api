@@ -108,14 +108,26 @@ class Jwxt:
         soup = BeautifulSoup(raw_html.encode('utf-8'), 'lxml')
         course_list = []
         for tr in soup.find_all('tr'):
-            for index, td in enumerate(tr.find_all('td')):
+            tds = tr.find_all('td')
+            for index, td in enumerate(tds):
                 if td.has_attr('rowspan'):
                     raw = td.contents
                     course_time = unicode(raw[4]).replace(u'节', '').split('-')
+
+                    offset = 0
+                    if len(tds) < 8:
+                        for course in course_list:
+                            if course['day'] <= index + offset and \
+                            int(course['start_time']) < int(course_time[0]) and \
+                            int(course['end_time']) >= int(course_time[0]):
+                                print course['course_name']
+                                offset += 1
+
+                    
                     course_list.append({
                         'course_name': raw[0],
                         'location': raw[2],
-                        'day': index,
+                        'day': index + offset,
                         'start_time': course_time[0],
                         'end_time': course_time[1],
                         'duration': raw[6]
